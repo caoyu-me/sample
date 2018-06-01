@@ -156,3 +156,11 @@ input {
 .panel {
   margin-top: 50px;
 }
+
+/*logout*/
+#logout{
+  cursor: default;
+  &:hover{
+    background-color: transparent;
+  }
+}
