@@ -4,9 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        //中间件 权限判断
+        //未登录的只能访问
+        $this->middleware('guest',[
+            'only'=>'create',
+        ]);
+        //不能错误访问
+        $this->middleware('auth',[
+            'except'=>['show','create','store']
+        ]);
+
+    }
+
     public function create()
     {
         return view('users.create');
@@ -34,5 +49,30 @@ class UsersController extends Controller
         Auth::login($user);
         session()->flash('success','欢迎，您将开启一段新的旅程！');
         return redirect()->route('users.show',[$user]);
+    }
+
+    public function edit(User $user)
+    {
+        //有无权限
+        $this->authorize('update',$user);
+        return view('users.edit',compact('user'));
+    }
+
+    public function update(User $user,Request $request)
+    {
+        $this->validate($request,[
+            'name'=>'required|max:50',
+            'password'=>'nullable|confirmed|min:6'
+        ]);
+        //有无权限
+        $this->authorize('update', $user);
+        $data=[];
+        $data['name']= $request->name;
+        if($request->passowrd){
+            $data['password']=bcrypt($request->password);
+        }
+        $user->update($data);
+        session()->flash('success','个人资料更新成功');
+        return redirect()->route('users.show',$user->id);
     }
 }
